@@ -153,67 +153,6 @@ const DOMAINS = [
   { id:8, name:"Software Development Security", weight:10, key:"d8" }
 ];
 
-const BLURBS = [
-  { domain:1, tag:"Risk Management", blurb:"Risk = Threat × Vulnerability × Asset Value. Risk treatment options are: Accept, Transfer (insurance), Avoid, or Mitigate. On the exam, 'reduce' and 'mitigate' mean the same thing — implementing a control." },
-  { domain:1, tag:"Security Governance", blurb:"Due care = doing what a reasonable person would do. Due diligence = researching and planning before acting. Remember: diligence comes BEFORE care — you plan, then you act." },
-  { domain:1, tag:"BIA", blurb:"In a Business Impact Analysis: RTO (Recovery Time Objective) is how fast you must recover. RPO (Recovery Point Objective) is how much data loss is acceptable. MTD/MTO is the maximum tolerable downtime before the business fails." },
-  { domain:1, tag:"Ethics", blurb:"The ISC2 Code of Ethics priority order: (1) Protect society, (2) Act honorably, (3) Provide competent service, (4) Advance the profession. Society always comes first — even before your employer." },
-  { domain:1, tag:"Personnel Security", blurb:"Separation of duties prevents any single person from completing a sensitive transaction alone. Mandatory vacation (forced leave) helps detect fraud — if someone must take leave, ongoing fraud becomes visible." },
-  { domain:1, tag:"Supply Chain Risk", blurb:"SCRM key concerns: counterfeit hardware, tampered firmware, and malicious code inserted by third-party vendors. Mitigations include hardware root of trust, software bill of materials (SBOM), and third-party audits." },
-  { domain:2, tag:"Data Roles", blurb:"Data Owner = decides classification and who can access. Data Custodian = implements protection (backups, access controls). Data Processor = processes data on behalf of the controller. Under GDPR, your org is the Controller; your SaaS vendor is the Processor." },
-  { domain:2, tag:"Data States", blurb:"Three states of data: At Rest (stored), In Transit (moving across a network), In Use (actively being processed in RAM/CPU). Each state needs different protections — encryption at rest, TLS in transit, memory protection in use." },
-  { domain:2, tag:"Data Destruction", blurb:"Sanitization methods ranked by strength: Clearing (overwrite — okay for reuse), Purging (degaussing/crypto-erase — for sensitive data), Destruction (shred/incinerate — for top secret). SSDs cannot be effectively degaussed — use crypto-erase or physical destruction." },
-  { domain:2, tag:"Data Remanence", blurb:"Data remanence = residual data left on media after deletion. A quick format does NOT eliminate it. Even after formatting, forensic tools can recover data. This is why secure sanitization procedures exist before disposal or reuse." },
-  { domain:2, tag:"Classification", blurb:"A container (folder, database, system) must be classified at the HIGHEST sensitivity level of any data it holds. One top-secret file makes the whole container top-secret. When in doubt, classify UP." },
-  { domain:2, tag:"DRM vs DLP", blurb:"DLP (Data Loss Prevention) stops data from leaving the organization. DRM (Digital Rights Management) controls what someone can DO with a file after they have it — no print, no copy, expiration dates. DLP is preventive; DRM is persistent." },
-  { domain:3, tag:"Security Models", blurb:"Bell-LaPadula = Confidentiality. Rule: No read up, no write down (Simple Security + *-property). Biba = Integrity. Rule: No read down, no write up. Clark-Wilson = Integrity via well-formed transactions and separation of duties." },
-  { domain:3, tag:"Cryptography", blurb:"Symmetric encryption (AES, 3DES) = same key to encrypt and decrypt. Fast, used for bulk data. Asymmetric (RSA, ECC) = public/private key pair. Slow, used for key exchange and digital signatures. Hybrid systems use asymmetric to exchange a symmetric session key." },
-  { domain:3, tag:"PKI", blurb:"Digital signatures provide: Authentication (who signed it), Integrity (it hasn't changed), Non-repudiation (they can't deny it). You sign with your PRIVATE key; others verify with your PUBLIC key. Encryption is the reverse: encrypt with recipient's public key." },
-  { domain:3, tag:"Secure Design", blurb:"Key secure design principles for the exam: Least Privilege (minimum access needed), Defense in Depth (layered controls), Fail Secure (default to deny on failure), Separation of Duties, and Zero Trust (never trust, always verify)." },
-  { domain:3, tag:"Vulnerabilities", blurb:"Covert channels allow unauthorized information flow. Storage channel = communicating via a shared resource (disk space). Timing channel = communicating via timing of events. Both are hard to eliminate; the goal is to reduce bandwidth and detect them." },
-  { domain:3, tag:"Cloud Security", blurb:"Cloud responsibility model: In IaaS, you manage OS and up. In PaaS, you manage applications and data. In SaaS, the provider manages almost everything. Shared responsibility means YOU still own your data and access management in all three models." },
-  { domain:4, tag:"OSI Model", blurb:"OSI layers 1-7: Physical, Data Link, Network, Transport, Session, Presentation, Application. Firewalls typically operate at Layer 3-4. WAFs operate at Layer 7. VPNs can operate at Layer 2 (L2TP) or Layer 3 (IPSec)." },
-  { domain:4, tag:"Firewall Types", blurb:"Packet filtering (Layer 3-4, stateless), Stateful inspection (tracks connection state), Proxy/Application firewall (Layer 7, deep inspection), Next-Gen Firewall (combines all + IPS + app awareness). On the exam, 'most secure' = application-layer proxy." },
-  { domain:4, tag:"VPN Protocols", blurb:"IPSec has two modes: Transport (encrypts payload only, host-to-host) and Tunnel (encrypts entire packet, used for site-to-site VPN). AH provides integrity/auth only. ESP provides integrity + confidentiality. Most VPNs use ESP in Tunnel mode." },
-  { domain:4, tag:"Network Attacks", blurb:"Key attacks to know: SYN Flood (half-open connections exhaust TCP stack — mitigate with SYN cookies), Smurf (amplification via broadcast ICMP), Fraggle (UDP version of Smurf), Man-in-the-Middle (ARP poisoning or rogue AP)." },
-  { domain:4, tag:"Wireless Security", blurb:"WEP = broken (RC4 with weak IVs). WPA = deprecated. WPA2 = still widely used (AES-CCMP). WPA3 = current best. On the exam: always choose WPA3 if available, then WPA2-Enterprise (802.1X with RADIUS) over WPA2-Personal." },
-  { domain:5, tag:"Authentication Factors", blurb:"Factor types: Something you KNOW (password, PIN), Something you HAVE (token, smart card), Something you ARE (biometrics), Somewhere you ARE (location), Something you DO (behavioral). MFA = two or more DIFFERENT factor types. Two passwords = not MFA." },
-  { domain:5, tag:"Biometrics", blurb:"Biometric accuracy: FRR (False Rejection Rate) = legitimate users denied. FAR (False Acceptance Rate) = impostors accepted. CER/EER = crossover error rate where FRR = FAR — the lower the CER, the more accurate the system. CER is the key exam metric." },
-  { domain:5, tag:"Access Control Models", blurb:"DAC = owner sets permissions (Windows NTFS). MAC = system enforces labels (military systems). RBAC = access based on job role (most common in enterprise). ABAC = access based on attributes/context (most flexible, used in cloud). Rule-BAC = firewall ACLs." },
-  { domain:5, tag:"Kerberos", blurb:"Kerberos flow: (1) Client asks AS for TGT using password hash. (2) AS returns TGT encrypted with KDC key. (3) Client presents TGT to TGS for a service ticket. (4) Service ticket presented to the target server. KDC is the single point of failure." },
-  { domain:5, tag:"Federated Identity", blurb:"SAML = XML-based SSO for web apps (assertions: Authentication, Attribute, Authorization). OAuth 2.0 = authorization delegation (not authentication). OpenID Connect = authentication layer built on top of OAuth 2.0. For exam: SAML for enterprise SSO, OIDC for modern web/mobile." },
-  { domain:6, tag:"Pen Testing Phases", blurb:"Pen test phases: Reconnaissance → Scanning → Enumeration → Exploitation → Post-exploitation → Reporting. Black box = no prior knowledge. White box = full knowledge. Gray box = partial knowledge. On the exam, always get written authorization first." },
-  { domain:6, tag:"Vulnerability Scanning", blurb:"Vulnerability scanning = identify weaknesses (passive, non-exploitative). Pen testing = actively exploit weaknesses. Scanning should be done regularly (continuous). Pen testing is periodic (annually or after major changes). You can scan without pen testing, but not vice versa." },
-  { domain:6, tag:"Audit Types", blurb:"Internal audit = done by your own team. External audit = done by a third party (more credible). SOC 1 = controls over financial reporting. SOC 2 = controls over security/availability/confidentiality (most relevant to cloud providers). SOC 2 Type II covers a period of time — more valuable than Type I (point-in-time)." },
-  { domain:6, tag:"Security Metrics", blurb:"Key metrics for the exam: MTTD (Mean Time to Detect), MTTR (Mean Time to Respond/Repair), MTTF (Mean Time to Failure — non-repairable), MTBF (Mean Time Between Failures — repairable). Higher MTBF = more reliable. Lower MTTR = faster recovery." },
-  { domain:7, tag:"Incident Response", blurb:"NIST IR phases: Preparation → Detection & Analysis → Containment → Eradication → Recovery → Post-incident Activity (lessons learned). On the exam, CONTAINMENT comes before ERADICATION — stop the bleeding before you clean the wound." },
-  { domain:7, tag:"Forensics", blurb:"Order of volatility (collect most volatile first): CPU registers/cache → RAM → Network connections → Running processes → Disk → Removable media → Backups. Never write to the original evidence — always work from a forensic image. Maintain chain of custody." },
-  { domain:7, tag:"BCP vs DRP", blurb:"BCP (Business Continuity Plan) = keep the BUSINESS running during a disruption. DRP (Disaster Recovery Plan) = restore IT SYSTEMS after a disruption. BCP is broader and includes DRP. BCP focuses on people and processes; DRP focuses on technology." },
-  { domain:7, tag:"Recovery Sites", blurb:"Hot site = fully operational, real-time data sync, highest cost, fastest RTO. Warm site = hardware ready, data needs to be restored, moderate cost/RTO. Cold site = just the facility, everything must be brought in, cheapest, slowest RTO. On the exam: cost vs RTO tradeoff." },
-  { domain:7, tag:"Change Management", blurb:"Change management key steps: Request → Review/Approval (CAB) → Test → Implement → Verify → Document. Emergency changes bypass normal approval but must be reviewed retroactively. The CAB (Change Advisory Board) approves changes in a formal process." },
-  { domain:8, tag:"SDLC Security", blurb:"Security must be integrated at EVERY phase of the SDLC, not bolted on at the end. The earlier a vulnerability is found, the cheaper it is to fix. A flaw found in requirements costs ~1x to fix; the same flaw found in production costs ~100x." },
-  { domain:8, tag:"Testing Types", blurb:"SAST (Static Analysis) = reviews source code without executing it — finds issues early. DAST (Dynamic Analysis) = tests the running application — finds runtime issues. IAST = combines both. Fuzzing = sends random/malformed input to find crashes. SAST = white box; DAST = black box." },
-  { domain:8, tag:"OWASP Top 10", blurb:"Top OWASP issues to know for CISSP: Injection (SQL, command), Broken Access Control, Cryptographic Failures, Security Misconfiguration, Vulnerable Components, Identification/Auth Failures. Mitigate injection with parameterized queries and input validation — NEVER by filtering alone." },
-  { domain:8, tag:"Software Attacks", blurb:"Buffer overflow = writing beyond allocated memory to overwrite adjacent memory or inject code. Mitigations: ASLR (randomize memory addresses), DEP/NX bit (non-executable stack), stack canaries (detect overflows), safe coding practices. This is a common CISSP exam topic." },
-  { domain:8, tag:"Agile Security", blurb:"In Agile/DevSecOps, security is integrated into every sprint rather than at the end. Key practices: threat modeling in design, SAST in CI/CD pipeline, security user stories in backlog, security champions on dev teams. The goal is 'shift left' — move security earlier in the process." }
-];
-
-function getRandomBlurb() {
-  return BLURBS[Math.floor(Math.random() * BLURBS.length)];
-}
-
-function getTodayBlurb() {
-  const dayIndex = Math.floor(Date.now() / 86400000) % BLURBS.length;
-  return BLURBS[dayIndex];
-}
-
-if (window.location.hash === '#blurb' || window.location.search === '?blurb') {
-  const b = getRandomBlurb();
-  document.open();
-  document.write(`<pre style="font-family:sans-serif;padding:20px;max-width:600px;white-space:pre-wrap">[D${b.domain} · ${b.tag}]\n\n${b.blurb}</pre>`);
-  document.close();
-}
-
 const STORAGE_KEY = 'cissp_coach_v2';
 
 function loadState() {
@@ -274,38 +213,6 @@ function getBarColor(pct) {
   if (pct >= 80) return 'var(--green)';
   if (pct >= 65) return 'var(--amber)';
   return 'var(--red)';
-}
-
-function renderBlurbCard(blurb) {
-  const b = blurb || getTodayBlurb();
-  return `<div style="background:var(--surface);border:0.5px solid var(--border);border-left:2px solid var(--accent);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:24px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <span style="font-family:var(--mono);font-size:11px;color:var(--accent);">D${b.domain} · ${b.tag}</span>
-      <button onclick="refreshBlurb()" style="background:none;border:0.5px solid var(--border);border-radius:20px;padding:3px 12px;font-size:11px;color:var(--text2);cursor:pointer;font-family:var(--sans);">new blurb</button>
-    </div>
-    <div id="blurb-text" style="font-size:14px;line-height:1.75;color:var(--text)">${b.blurb}</div>
-    <div style="margin-top:12px;">
-      <button onclick="askAboutBlurb()" style="background:none;border:0.5px solid var(--accent-border);border-radius:20px;padding:4px 14px;font-size:12px;color:var(--accent);cursor:pointer;font-family:var(--sans);">drill me on this ↗</button>
-    </div>
-  </div>`;
-}
-
-let currentBlurb = null;
-
-function refreshBlurb() {
-  currentBlurb = getRandomBlurb();
-  const container = document.getElementById('blurb-container');
-  if (container) container.outerHTML = `<div id="blurb-container">${renderBlurbCard(currentBlurb)}</div>`;
-  else renderHome();
-}
-
-function askAboutBlurb() {
-  const b = currentBlurb || getTodayBlurb();
-  currentMode = 'free';
-  currentDomain = DOMAINS.find(d => d.id === b.domain) || null;
-  chatHistory = [];
-  renderChatScreen(b.tag, 'Coaching', 'teach');
-  sendMessage(`I just read this CISSP micro-training blurb: "${b.blurb}". Ask me 3 quick questions to test whether I really understand this concept. Go one question at a time.`, true);
 }
 
 function renderHome() {
@@ -379,9 +286,6 @@ function renderHome() {
         <span class="ab-sub">Mixed domains · timed pressure</span>
       </div>
     </div>
-
-    <div class="section-label">Today's micro-training</div>
-    <div id="blurb-container">${renderBlurbCard()}</div>
 
     <div class="section-label">All domains</div>
     <div class="domain-grid">${domainCards}</div>
