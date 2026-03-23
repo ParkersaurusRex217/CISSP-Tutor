@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CISSP Coach</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: rgba(255,255,255,0.08);
+    --border-bright: rgba(255,255,255,0.16);
+    --accent: #4f8ef7;
+    --accent-dim: rgba(79,142,247,0.15);
+    --accent-border: rgba(79,142,247,0.3);
+    --green: #3dd68c;
+    --green-dim: rgba(61,214,140,0.12);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --red: #ff5f57;
+    --red-dim: rgba(255,95,87,0.12);
+    --text: #e8e8f0;
+    --text2: #8888aa;
+    --text3: #55556a;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --r: 8px;
+    --r-lg: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+
+  /* Layout */
+  .shell { display: flex; flex-direction: column; min-height: 100vh; max-width: 800px; margin: 0 auto; padding: 0 16px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 0 16px; border-bottom: 0.5px solid var(--border); margin-bottom: 24px; }
+  .logo { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 0.08em; }
+  .streak-badge { font-family: var(--mono); font-size: 12px; color: var(--amber); background: var(--amber-dim); border: 0.5px solid rgba(245,166,35,0.25); border-radius: 20px; padding: 4px 12px; }
+
+  /* Home screen */
+  .home-header { margin-bottom: 28px; }
+  .home-header h1 { font-size: 26px; font-weight: 300; line-height: 1.3; color: var(--text); margin-bottom: 6px; }
+  .home-header p { font-size: 14px; color: var(--text2); }
+
+  /* Domain grid */
+  .domain-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-bottom: 28px; }
+  .domain-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 14px 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .domain-card:hover { border-color: var(--border-bright); background: var(--surface2); }
+  .domain-card.passing { border-left: 2px solid var(--green); }
+  .domain-card.needs-work { border-left: 2px solid var(--amber); }
+  .domain-card.critical { border-left: 2px solid var(--red); }
+  .domain-card.untested { border-left: 2px solid var(--border-bright); }
+  .domain-card.completed { border-left: 2px solid var(--accent); }
+  .d-num { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .d-name { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 10px; line-height: 1.4; }
+  .d-bar-bg { height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; margin-bottom: 6px; }
+  .d-bar { height: 3px; border-radius: 2px; transition: width 0.4s; }
+  .d-meta { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--text3); }
+  .d-pct { }
+
+  /* Quick actions */
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 32px; }
+  .action-btn { flex: 1; min-width: 140px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 14px 16px; cursor: pointer; transition: all 0.15s; text-align: left; }
+  .action-btn:hover { border-color: var(--accent-border); background: var(--accent-dim); }
+  .action-btn .ab-icon { font-size: 18px; margin-bottom: 8px; }
+  .action-btn .ab-label { font-size: 13px; font-weight: 500; color: var(--text); display: block; margin-bottom: 2px; }
+  .action-btn .ab-sub { font-size: 12px; color: var(--text2); }
+
+  /* Chat area */
+  .chat-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .back-btn { background: none; border: 0.5px solid var(--border); border-radius: var(--r); padding: 6px 14px; font-size: 13px; color: var(--text2); cursor: pointer; font-family: var(--sans); }
+  .back-btn:hover { border-color: var(--border-bright); color: var(--text); }
+  .chat-title { font-size: 16px; font-weight: 500; }
+  .chat-subtitle { font-size: 12px; color: var(--text2); font-family: var(--mono); }
+
+  .chat-messages { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; min-height: 200px; }
+  .msg { max-width: 88%; }
+  .msg.assistant { align-self: flex-start; }
+  .msg.user { align-self: flex-end; }
+  .msg-bubble { padding: 12px 16px; border-radius: var(--r-lg); font-size: 14px; line-height: 1.7; }
+  .msg.assistant .msg-bubble { background: var(--surface); border: 0.5px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
+  .msg.user .msg-bubble { background: var(--accent-dim); border: 0.5px solid var(--accent-border); color: var(--text); border-bottom-right-radius: 4px; }
+  .msg-bubble p { margin-bottom: 10px; }
+  .msg-bubble p:last-child { margin-bottom: 0; }
+  .msg-bubble strong { font-weight: 500; color: var(--accent); }
+  .msg-bubble em { color: var(--text2); font-style: normal; }
+  .msg-bubble ul { padding-left: 18px; }
+  .msg-bubble li { margin-bottom: 4px; }
+  .msg-bubble .score-line { font-family: var(--mono); font-size: 13px; padding: 8px 12px; background: rgba(255,255,255,0.04); border-radius: var(--r); margin: 8px 0; }
+
+  .typing-indicator { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-lg); border-bottom-left-radius: 4px; width: fit-content; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); animation: blink 1.2s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0.3} 40%{opacity:1} }
+
+  .chat-input-wrap { display: flex; gap: 10px; padding-bottom: 24px; }
+  .chat-input { flex: 1; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 12px 16px; font-size: 14px; color: var(--text); font-family: var(--sans); resize: none; outline: none; transition: border-color 0.15s; min-height: 48px; max-height: 160px; }
+  .chat-input:focus { border-color: var(--accent-border); }
+  .chat-input::placeholder { color: var(--text3); }
+  .send-btn { background: var(--accent); border: none; border-radius: var(--r-lg); width: 48px; min-width: 48px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.15s; }
+  .send-btn:hover { opacity: 0.85; }
+  .send-btn:disabled { opacity: 0.35; cursor: default; }
+  .send-btn svg { width: 18px; height: 18px; fill: #fff; }
+
+  /* Suggested prompts */
+  .suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .sug-btn { background: var(--surface); border: 0.5px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 12px; color: var(--text2); cursor: pointer; transition: all 0.15s; font-family: var(--sans); }
+  .sug-btn:hover { border-color: var(--accent-border); color: var(--accent); background: var(--accent-dim); }
+
+  /* Stats bar */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 24px; }
+  .stat-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r); padding: 12px; }
+  .stat-val { font-family: var(--mono); font-size: 22px; font-weight: 500; margin-bottom: 2px; }
+  .stat-lbl { font-size: 11px; color: var(--text2); }
+
+  /* Mode badge */
+  .mode-badge { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 3px 10px; border-radius: 20px; margin-left: 10px; }
+  .mode-badge.quiz { background: var(--accent-dim); color: var(--accent); border: 0.5px solid var(--accent-border); }
+  .mode-badge.teach { background: var(--green-dim); color: var(--green); border: 0.5px solid rgba(61,214,140,0.25); }
+  .mode-badge.drill { background: var(--amber-dim); color: var(--amber); border: 0.5px solid rgba(245,166,35,0.25); }
+  .mode-badge.weak { background: var(--red-dim); color: var(--red); border: 0.5px solid rgba(255,95,87,0.25); }
+
+  /* Progress section */
+  .section-label { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+
+  @media (max-width: 500px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .domain-grid { grid-template-columns: 1fr; }
+    .actions-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="logo">CISSP // COACH</div>
+    <div class="streak-badge" id="streak-badge">— day streak</div>
+  </div>
+  <div id="screen"></div>
+</div>
+
+<script>
+const DOMAINS = [
+  { id:1, name:"Security & Risk Management", weight:16, key:"d1" },
+  { id:2, name:"Asset Security", weight:10, key:"d2" },
+  { id:3, name:"Security Architecture & Engineering", weight:13, key:"d3" },
+  { id:4, name:"Communication & Network Security", weight:13, key:"d4" },
+  { id:5, name:"Identity & Access Management", weight:13, key:"d5" },
+  { id:6, name:"Security Assessment & Testing", weight:12, key:"d6" },
+  { id:7, name:"Security Operations", weight:13, key:"d7" },
+  { id:8, name:"Software Development Security", weight:10, key:"d8" }
+];
+
+const BLURBS = [
+  { domain:1, tag:"Risk Management", blurb:"Risk = Threat × Vulnerability × Asset Value. Risk treatment options are: Accept, Transfer (insurance), Avoid, or Mitigate. On the exam, 'reduce' and 'mitigate' mean the same thing — implementing a control." },
+  { domain:1, tag:"Security Governance", blurb:"Due care = doing what a reasonable person would do. Due diligence = researching and planning before acting. Remember: diligence comes BEFORE care — you plan, then you act." },
+  { domain:1, tag:"BIA", blurb:"In a Business Impact Analysis: RTO (Recovery Time Objective) is how fast you must recover. RPO (Recovery Point Objective) is how much data loss is acceptable. MTD/MTO is the maximum tolerable downtime before the business fails." },
+  { domain:1, tag:"Ethics", blurb:"The ISC2 Code of Ethics priority order: (1) Protect society, (2) Act honorably, (3) Provide competent service, (4) Advance the profession. Society always comes first — even before your employer." },
+  { domain:1, tag:"Personnel Security", blurb:"Separation of duties prevents any single person from completing a sensitive transaction alone. Mandatory vacation (forced leave) helps detect fraud — if someone must take leave, ongoing fraud becomes visible." },
+  { domain:1, tag:"Supply Chain Risk", blurb:"SCRM key concerns: counterfeit hardware, tampered firmware, and malicious code inserted by third-party vendors. Mitigations include hardware root of trust, software bill of materials (SBOM), and third-party audits." },
+  { domain:2, tag:"Data Roles", blurb:"Data Owner = decides classification and who can access. Data Custodian = implements protection (backups, access controls). Data Processor = processes data on behalf of the controller. Under GDPR, your org is the Controller; your SaaS vendor is the Processor." },
+  { domain:2, tag:"Data States", blurb:"Three states of data: At Rest (stored), In Transit (moving across a network), In Use (actively being processed in RAM/CPU). Each state needs different protections — encryption at rest, TLS in transit, memory protection in use." },
+  { domain:2, tag:"Data Destruction", blurb:"Sanitization methods ranked by strength: Clearing (overwrite — okay for reuse), Purging (degaussing/crypto-erase — for sensitive data), Destruction (shred/incinerate — for top secret). SSDs cannot be effectively degaussed — use crypto-erase or physical destruction." },
+  { domain:2, tag:"Data Remanence", blurb:"Data remanence = residual data left on media after deletion. A quick format does NOT eliminate it. Even after formatting, forensic tools can recover data. This is why secure sanitization procedures exist before disposal or reuse." },
+  { domain:2, tag:"Classification", blurb:"A container (folder, database, system) must be classified at the HIGHEST sensitivity level of any data it holds. One top-secret file makes the whole container top-secret. When in doubt, classify UP." },
+  { domain:2, tag:"DRM vs DLP", blurb:"DLP (Data Loss Prevention) stops data from leaving the organization. DRM (Digital Rights Management) controls what someone can DO with a file after they have it — no print, no copy, expiration dates. DLP is preventive; DRM is persistent." },
+  { domain:3, tag:"Security Models", blurb:"Bell-LaPadula = Confidentiality. Rule: No read up, no write down (Simple Security + *-property). Biba = Integrity. Rule: No read down, no write up. Clark-Wilson = Integrity via well-formed transactions and separation of duties." },
+  { domain:3, tag:"Cryptography", blurb:"Symmetric encryption (AES, 3DES) = same key to encrypt and decrypt. Fast, used for bulk data. Asymmetric (RSA, ECC) = public/private key pair. Slow, used for key exchange and digital signatures. Hybrid systems use asymmetric to exchange a symmetric session key." },
+  { domain:3, tag:"PKI", blurb:"Digital signatures provide: Authentication (who signed it), Integrity (it hasn't changed), Non-repudiation (they can't deny it). You sign with your PRIVATE key; others verify with your PUBLIC key. Encryption is the reverse: encrypt with recipient's public key." },
+  { domain:3, tag:"Secure Design", blurb:"Key secure design principles for the exam: Least Privilege (minimum access needed), Defense in Depth (layered controls), Fail Secure (default to deny on failure), Separation of Duties, and Zero Trust (never trust, always verify)." },
+  { domain:3, tag:"Vulnerabilities", blurb:"Covert channels allow unauthorized information flow. Storage channel = communicating via a shared resource (disk space). Timing channel = communicating via timing of events. Both are hard to eliminate; the goal is to reduce bandwidth and detect them." },
+  { domain:3, tag:"Cloud Security", blurb:"Cloud responsibility model: In IaaS, you manage OS and up. In PaaS, you manage applications and data. In SaaS, the provider manages almost everything. Shared responsibility means YOU still own your data and access management in all three models." },
+  { domain:4, tag:"OSI Model", blurb:"OSI layers 1-7: Physical, Data Link, Network, Transport, Session, Presentation, Application. Firewalls typically operate at Layer 3-4. WAFs operate at Layer 7. VPNs can operate at Layer 2 (L2TP) or Layer 3 (IPSec)." },
+  { domain:4, tag:"Firewall Types", blurb:"Packet filtering (Layer 3-4, stateless), Stateful inspection (tracks connection state), Proxy/Application firewall (Layer 7, deep inspection), Next-Gen Firewall (combines all + IPS + app awareness). On the exam, 'most secure' = application-layer proxy." },
+  { domain:4, tag:"VPN Protocols", blurb:"IPSec has two modes: Transport (encrypts payload only, host-to-host) and Tunnel (encrypts entire packet, used for site-to-site VPN). AH provides integrity/auth only. ESP provides integrity + confidentiality. Most VPNs use ESP in Tunnel mode." },
+  { domain:4, tag:"Network Attacks", blurb:"Key attacks to know: SYN Flood (half-open connections exhaust TCP stack — mitigate with SYN cookies), Smurf (amplification via broadcast ICMP), Fraggle (UDP version of Smurf), Man-in-the-Middle (ARP poisoning or rogue AP)." },
+  { domain:4, tag:"Wireless Security", blurb:"WEP = broken (RC4 with weak IVs). WPA = deprecated. WPA2 = still widely used (AES-CCMP). WPA3 = current best. On the exam: always choose WPA3 if available, then WPA2-Enterprise (802.1X with RADIUS) over WPA2-Personal." },
+  { domain:5, tag:"Authentication Factors", blurb:"Factor types: Something you KNOW (password, PIN), Something you HAVE (token, smart card), Something you ARE (biometrics), Somewhere you ARE (location), Something you DO (behavioral). MFA = two or more DIFFERENT factor types. Two passwords = not MFA." },
+  { domain:5, tag:"Biometrics", blurb:"Biometric accuracy: FRR (False Rejection Rate) = legitimate users denied. FAR (False Acceptance Rate) = impostors accepted. CER/EER = crossover error rate where FRR = FAR — the lower the CER, the more accurate the system. CER is the key exam metric." },
+  { domain:5, tag:"Access Control Models", blurb:"DAC = owner sets permissions (Windows NTFS). MAC = system enforces labels (military systems). RBAC = access based on job role (most common in enterprise). ABAC = access based on attributes/context (most flexible, used in cloud). Rule-BAC = firewall ACLs." },
+  { domain:5, tag:"Kerberos", blurb:"Kerberos flow: (1) Client asks AS for TGT using password hash. (2) AS returns TGT encrypted with KDC key. (3) Client presents TGT to TGS for a service ticket. (4) Service ticket presented to the target server. KDC is the single point of failure." },
+  { domain:5, tag:"Federated Identity", blurb:"SAML = XML-based SSO for web apps (assertions: Authentication, Attribute, Authorization). OAuth 2.0 = authorization delegation (not authentication). OpenID Connect = authentication layer built on top of OAuth 2.0. For exam: SAML for enterprise SSO, OIDC for modern web/mobile." },
+  { domain:6, tag:"Pen Testing Phases", blurb:"Pen test phases: Reconnaissance → Scanning → Enumeration → Exploitation → Post-exploitation → Reporting. Black box = no prior knowledge. White box = full knowledge. Gray box = partial knowledge. On the exam, always get written authorization first." },
+  { domain:6, tag:"Vulnerability Scanning", blurb:"Vulnerability scanning = identify weaknesses (passive, non-exploitative). Pen testing = actively exploit weaknesses. Scanning should be done regularly (continuous). Pen testing is periodic (annually or after major changes). You can scan without pen testing, but not vice versa." },
+  { domain:6, tag:"Audit Types", blurb:"Internal audit = done by your own team. External audit = done by a third party (more credible). SOC 1 = controls over financial reporting. SOC 2 = controls over security/availability/confidentiality (most relevant to cloud providers). SOC 2 Type II covers a period of time — more valuable than Type I (point-in-time)." },
+  { domain:6, tag:"Security Metrics", blurb:"Key metrics for the exam: MTTD (Mean Time to Detect), MTTR (Mean Time to Respond/Repair), MTTF (Mean Time to Failure — non-repairable), MTBF (Mean Time Between Failures — repairable). Higher MTBF = more reliable. Lower MTTR = faster recovery." },
+  { domain:7, tag:"Incident Response", blurb:"NIST IR phases: Preparation → Detection & Analysis → Containment → Eradication → Recovery → Post-incident Activity (lessons learned). On the exam, CONTAINMENT comes before ERADICATION — stop the bleeding before you clean the wound." },
+  { domain:7, tag:"Forensics", blurb:"Order of volatility (collect most volatile first): CPU registers/cache → RAM → Network connections → Running processes → Disk → Removable media → Backups. Never write to the original evidence — always work from a forensic image. Maintain chain of custody." },
+  { domain:7, tag:"BCP vs DRP", blurb:"BCP (Business Continuity Plan) = keep the BUSINESS running during a disruption. DRP (Disaster Recovery Plan) = restore IT SYSTEMS after a disruption. BCP is broader and includes DRP. BCP focuses on people and processes; DRP focuses on technology." },
+  { domain:7, tag:"Recovery Sites", blurb:"Hot site = fully operational, real-time data sync, highest cost, fastest RTO. Warm site = hardware ready, data needs to be restored, moderate cost/RTO. Cold site = just the facility, everything must be brought in, cheapest, slowest RTO. On the exam: cost vs RTO tradeoff." },
+  { domain:7, tag:"Change Management", blurb:"Change management key steps: Request → Review/Approval (CAB) → Test → Implement → Verify → Document. Emergency changes bypass normal approval but must be reviewed retroactively. The CAB (Change Advisory Board) approves changes in a formal process." },
+  { domain:8, tag:"SDLC Security", blurb:"Security must be integrated at EVERY phase of the SDLC, not bolted on at the end. The earlier a vulnerability is found, the cheaper it is to fix. A flaw found in requirements costs ~1x to fix; the same flaw found in production costs ~100x." },
+  { domain:8, tag:"Testing Types", blurb:"SAST (Static Analysis) = reviews source code without executing it — finds issues early. DAST (Dynamic Analysis) = tests the running application — finds runtime issues. IAST = combines both. Fuzzing = sends random/malformed input to find crashes. SAST = white box; DAST = black box." },
+  { domain:8, tag:"OWASP Top 10", blurb:"Top OWASP issues to know for CISSP: Injection (SQL, command), Broken Access Control, Cryptographic Failures, Security Misconfiguration, Vulnerable Components, Identification/Auth Failures. Mitigate injection with parameterized queries and input validation — NEVER by filtering alone." },
+  { domain:8, tag:"Software Attacks", blurb:"Buffer overflow = writing beyond allocated memory to overwrite adjacent memory or inject code. Mitigations: ASLR (randomize memory addresses), DEP/NX bit (non-executable stack), stack canaries (detect overflows), safe coding practices. This is a common CISSP exam topic." },
+  { domain:8, tag:"Agile Security", blurb:"In Agile/DevSecOps, security is integrated into every sprint rather than at the end. Key practices: threat modeling in design, SAST in CI/CD pipeline, security user stories in backlog, security champions on dev teams. The goal is 'shift left' — move security earlier in the process." }
+];
+
+function getRandomBlurb() {
+  return BLURBS[Math.floor(Math.random() * BLURBS.length)];
+}
+
+function getTodayBlurb() {
+  const dayIndex = Math.floor(Date.now() / 86400000) % BLURBS.length;
+  return BLURBS[dayIndex];
+}
+
+if (window.location.hash === '#blurb' || window.location.search === '?blurb') {
+  const b = getRandomBlurb();
+  document.open();
+  document.write(`<pre style="font-family:sans-serif;padding:20px;max-width:600px;white-space:pre-wrap">[D${b.domain} · ${b.tag}]\n\n${b.blurb}</pre>`);
+  document.close();
+}
+
+const STORAGE_KEY = 'cissp_coach_v2';
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return {
+    scores: {},
+    sessions: [],
+    lastStudy: null,
+    streak: 0,
+    totalQuestions: 0,
+    totalCorrect: 0
+  };
+}
+
+function saveState(s) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e) {}
+}
+
+function updateStreak(state) {
+  const today = new Date().toDateString();
+  if (state.lastStudy === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (state.lastStudy === yesterday) {
+    state.streak = (state.streak || 0) + 1;
+  } else if (state.lastStudy !== today) {
+    state.streak = 1;
+  }
+  state.lastStudy = today;
+}
+
+let appState = loadState();
+let chatHistory = [];
+let currentMode = null;
+let currentDomain = null;
+let isTyping = false;
+
+function getDomainStatus(key) {
+  const s = appState.scores[key];
+  if (!s || s.attempts === 0) return 'untested';
+  const pct = Math.round((s.correct / s.total) * 100);
+  if (key === 'd1' && pct >= 70) return 'completed';
+  if (pct >= 80) return 'passing';
+  if (pct >= 65) return 'needs-work';
+  return 'critical';
+}
+
+function getDomainScore(key) {
+  const s = appState.scores[key];
+  if (!s || !s.total) return null;
+  return Math.round((s.correct / s.total) * 100);
+}
+
+function getBarColor(pct) {
+  if (pct === null) return 'var(--border-bright)';
+  if (pct >= 80) return 'var(--green)';
+  if (pct >= 65) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+function renderBlurbCard(blurb) {
+  const b = blurb || getTodayBlurb();
+  return `<div style="background:var(--surface);border:0.5px solid var(--border);border-left:2px solid var(--accent);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--accent);">D${b.domain} · ${b.tag}</span>
+      <button onclick="refreshBlurb()" style="background:none;border:0.5px solid var(--border);border-radius:20px;padding:3px 12px;font-size:11px;color:var(--text2);cursor:pointer;font-family:var(--sans);">new blurb</button>
+    </div>
+    <div id="blurb-text" style="font-size:14px;line-height:1.75;color:var(--text)">${b.blurb}</div>
+    <div style="margin-top:12px;">
+      <button onclick="askAboutBlurb()" style="background:none;border:0.5px solid var(--accent-border);border-radius:20px;padding:4px 14px;font-size:12px;color:var(--accent);cursor:pointer;font-family:var(--sans);">drill me on this ↗</button>
+    </div>
+  </div>`;
+}
+
+let currentBlurb = null;
+
+function refreshBlurb() {
+  currentBlurb = getRandomBlurb();
+  const container = document.getElementById('blurb-container');
+  if (container) container.outerHTML = `<div id="blurb-container">${renderBlurbCard(currentBlurb)}</div>`;
+  else renderHome();
+}
+
+function askAboutBlurb() {
+  const b = currentBlurb || getTodayBlurb();
+  currentMode = 'free';
+  currentDomain = DOMAINS.find(d => d.id === b.domain) || null;
+  chatHistory = [];
+  renderChatScreen(b.tag, 'Coaching', 'teach');
+  sendMessage(`I just read this CISSP micro-training blurb: "${b.blurb}". Ask me 3 quick questions to test whether I really understand this concept. Go one question at a time.`, true);
+}
+
+function renderHome() {
+  updateStreak(appState);
+  saveState(appState);
+  document.getElementById('streak-badge').textContent = `${appState.streak || 0} day streak`;
+
+  const totalDomains = DOMAINS.length;
+  const testedDomains = DOMAINS.filter(d => getDomainStatus(d.key) !== 'untested').length;
+  const passingDomains = DOMAINS.filter(d => ['passing','completed'].includes(getDomainStatus(d.key))).length;
+  const overallPct = appState.totalQuestions > 0 ? Math.round((appState.totalCorrect / appState.totalQuestions) * 100) : 0;
+
+  const domainCards = DOMAINS.map(d => {
+    const status = getDomainStatus(d.key);
+    const pct = getDomainScore(d.key);
+    const barColor = getBarColor(pct);
+    const label = pct !== null ? `${pct}%` : 'untested';
+    const s = appState.scores[d.key];
+    const attempts = s ? s.attempts || 0 : 0;
+    return `<div class="domain-card ${status}" onclick="startDomainChat(${d.id})">
+      <div class="d-num">DOMAIN ${d.id} · ${d.weight}%</div>
+      <div class="d-name">${d.name}</div>
+      <div class="d-bar-bg"><div class="d-bar" style="width:${pct||0}%;background:${barColor}"></div></div>
+      <div class="d-meta"><span>${label}</span><span>${attempts} session${attempts!==1?'s':''}</span></div>
+    </div>`;
+  }).join('');
+
+  const weakDomains = DOMAINS.filter(d => ['needs-work','critical'].includes(getDomainStatus(d.key)));
+  const weakSuggest = weakDomains.length > 0
+    ? `<div class="action-btn" onclick="startWeakSpots()">
+        <div class="ab-icon">⚡</div>
+        <span class="ab-label">Weak spot drill</span>
+        <span class="ab-sub">${weakDomains.length} domain${weakDomains.length!==1?'s':''} need attention</span>
+       </div>`
+    : '';
+
+  const nextDomain = DOMAINS.find(d => getDomainStatus(d.key) === 'untested');
+  const nextSuggest = nextDomain
+    ? `<div class="action-btn" onclick="startDomainChat(${nextDomain.id})">
+        <div class="ab-icon">▶</div>
+        <span class="ab-label">Continue studying</span>
+        <span class="ab-sub">Domain ${nextDomain.id}: ${nextDomain.name.split(' ').slice(0,3).join(' ')}...</span>
+       </div>`
+    : '';
+
+  document.getElementById('screen').innerHTML = `
+    <div class="home-header">
+      <h1>Your CISSP<br>study dashboard</h1>
+      <p>Track progress across all 8 domains · exam weight shown per domain</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val" style="color:var(--accent)">${testedDomains}/${totalDomains}</div><div class="stat-lbl">domains tested</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--green)">${passingDomains}</div><div class="stat-lbl">passing (≥80%)</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--amber)">${overallPct}%</div><div class="stat-lbl">overall score</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--text)">${appState.totalQuestions}</div><div class="stat-lbl">questions answered</div></div>
+    </div>
+
+    <div class="section-label">Quick actions</div>
+    <div class="actions-row">
+      ${weakSuggest}
+      ${nextSuggest}
+      <div class="action-btn" onclick="startFreeChat()">
+        <div class="ab-icon">💬</div>
+        <span class="ab-label">Ask your coach</span>
+        <span class="ab-sub">Concepts, questions, anything CISSP</span>
+      </div>
+      <div class="action-btn" onclick="startFullExam()">
+        <div class="ab-icon">📋</div>
+        <span class="ab-label">Simulated exam</span>
+        <span class="ab-sub">Mixed domains · timed pressure</span>
+      </div>
+    </div>
+
+    <div class="section-label">Today's micro-training</div>
+    <div id="blurb-container">${renderBlurbCard()}</div>
+
+    <div class="section-label">All domains</div>
+    <div class="domain-grid">${domainCards}</div>
+  `;
+}
+
+function buildSystemPrompt(mode, domainInfo, scores) {
+  const scoresSummary = DOMAINS.map(d => {
+    const pct = getDomainScore(d.key);
+    return `D${d.id} ${d.name}: ${pct !== null ? pct+'%' : 'untested'}`;
+  }).join(' | ');
+
+  const base = `You are an expert ISC2 CISSP exam coach. You are helping a student prepare for the CISSP certification exam using the official April 2024 ISC2 exam outline.
+
+STUDENT PROGRESS: ${scoresSummary}
+Note: Domain 1 has already been passed by the student.
+
+KEY COACHING PRINCIPLES:
+- Always think from a SENIOR SECURITY MANAGER perspective — the CISSP tests management judgment, not just technical knowledge
+- When giving quiz questions, use realistic scenario-based questions that mirror the actual exam
+- After any quiz, always record results with the format: SCORE_UPDATE:domain_key:correct:total (e.g. SCORE_UPDATE:d2:15:20)
+- Be direct, thorough, and specific to the CISSP body of knowledge
+- Reference specific frameworks (NIST, ISO, COBIT), laws (GDPR, HIPAA, SOX), and standards when relevant
+- Use the April 2024 ISC2 CISSP Exam Outline as your authoritative source`;
+
+  if (mode === 'quiz') {
+    return `${base}
+
+CURRENT MODE: Domain Quiz
+DOMAIN: ${domainInfo}
+
+Your job: Generate a 20-question scenario-based quiz for this domain. Number questions 1-20. After each answer the student gives, provide instant feedback explaining why it's right or wrong. At the end of all 20 questions, provide a detailed score breakdown by subtopic, identify weak areas, and output the SCORE_UPDATE tag. Keep questions challenging — at the 700+ point level.`;
+  }
+
+  if (mode === 'teach') {
+    return `${base}
+
+CURRENT MODE: Teaching Session
+DOMAIN: ${domainInfo}
+
+Your job: Teach the student this domain thoroughly. Start with a structured overview of all subtopics, then go deep on each one. Use examples, mnemonics, and real-world scenarios. After teaching, offer to quiz them or answer questions. Make it engaging — not just a list of facts.`;
+  }
+
+  if (mode === 'drill') {
+    return `${base}
+
+CURRENT MODE: Quick Drill — Weak Spot Focus
+WEAK DOMAINS: ${domainInfo}
+
+Your job: Give the student rapid-fire 5-question mini-drills on their weakest subtopics. After each set of 5, ask if they want more or want to switch topics. Track improvement and encourage them. Output SCORE_UPDATE tags after each set.`;
+  }
+
+  if (mode === 'exam') {
+    return `${base}
+
+CURRENT MODE: Full Simulated Exam
+Your job: Generate a 50-question mixed-domain exam simulation drawn proportionally from all 8 domains based on their exam weights. Present questions one at a time or in batches of 10. At the end, provide a full breakdown by domain and output SCORE_UPDATE tags for each domain.`;
+  }
+
+  return `${base}
+
+CURRENT MODE: Free Coaching
+Your job: Answer any CISSP-related questions the student has. You can explain concepts, clarify confusing topics, compare frameworks, help with mnemonics, or generate practice questions on demand. Be conversational but always accurate to the CISSP body of knowledge.`;
+}
+
+function startDomainChat(domainId) {
+  const domain = DOMAINS.find(d => d.id === domainId);
+  currentDomain = domain;
+  currentMode = null;
+  chatHistory = [];
+  renderDomainOptions(domain);
+}
+
+function renderDomainOptions(domain) {
+  const status = getDomainStatus(domain.key);
+  const pct = getDomainScore(domain.key);
+
+  document.getElementById('screen').innerHTML = `
+    <div class="chat-header">
+      <button class="back-btn" onclick="renderHome()">← Back</button>
+      <div>
+        <div class="chat-title">Domain ${domain.id}: ${domain.name}</div>
+        <div class="chat-subtitle">${domain.weight}% of exam · ${pct !== null ? pct+'% last score' : 'not yet tested'}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:24px;">
+      <div class="section-label">Choose your study mode</div>
+      <div class="actions-row">
+        <div class="action-btn" onclick="beginSession('quiz', ${domain.id})">
+          <div class="ab-icon">📝</div>
+          <span class="ab-label">Take a quiz</span>
+          <span class="ab-sub">20 exam-style questions</span>
+        </div>
+        <div class="action-btn" onclick="beginSession('teach', ${domain.id})">
+          <div class="ab-icon">📖</div>
+          <span class="ab-label">Teach me this domain</span>
+          <span class="ab-sub">Full concept walkthrough</span>
+        </div>
+        <div class="action-btn" onclick="beginSession('free', ${domain.id})">
+          <div class="ab-icon">💬</div>
+          <span class="ab-label">Ask questions</span>
+          <span class="ab-sub">Open coaching session</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function beginSession(mode, domainId) {
+  const domain = DOMAINS.find(d => d.id === domainId) || currentDomain;
+  currentMode = mode;
+  currentDomain = domain;
+  chatHistory = [];
+
+  const modeLabels = { quiz: 'Quiz', teach: 'Teach me', free: 'Coaching', drill: 'Weak spot drill', exam: 'Simulated exam' };
+  const modeBadgeClass = { quiz: 'quiz', teach: 'teach', free: 'teach', drill: 'drill', exam: 'quiz' };
+
+  const domainInfo = domain ? `Domain ${domain.id}: ${domain.name}` : 'All domains';
+
+  renderChatScreen(domainInfo, modeLabels[mode], modeBadgeClass[mode] || 'quiz');
+
+  let openingPrompt = '';
+  if (mode === 'quiz') openingPrompt = `Start my Domain ${domain.id} (${domain.name}) quiz. Give me the first question.`;
+  else if (mode === 'teach') openingPrompt = `Teach me Domain ${domain.id}: ${domain.name}. Give me a comprehensive overview and then go deep on each subtopic.`;
+  else if (mode === 'free') openingPrompt = `I want to study Domain ${domain.id}: ${domain.name}. What are the most important concepts I need to know for the CISSP exam?`;
+  else if (mode === 'drill') openingPrompt = `Start a weak spot drill session. Focus on my lowest-scoring domains and give me rapid-fire questions.`;
+  else if (mode === 'exam') openingPrompt = `Start a 50-question simulated CISSP exam. Mix questions from all domains proportional to their exam weights.`;
+
+  sendMessage(openingPrompt, true);
+}
+
+function startWeakSpots() {
+  currentMode = 'drill';
+  currentDomain = null;
+  chatHistory = [];
+  const weakDomains = DOMAINS.filter(d => ['needs-work','critical'].includes(getDomainStatus(d.key)));
+  const domainInfo = weakDomains.map(d => `D${d.id} ${d.name}`).join(', ');
+  renderChatScreen('Weak Spot Drill', 'Drill', 'drill');
+  sendMessage(`Start a weak spot drill. My weak domains are: ${domainInfo}. Hit me with targeted questions on my trouble areas.`, true);
+}
+
+function startFreeChat() {
+  currentMode = 'free';
+  currentDomain = null;
+  chatHistory = [];
+  renderChatScreen('CISSP Coach', 'Coaching', 'teach');
+  addMessageToUI('assistant', `Hey — I'm your CISSP coach. Ask me anything: concepts you're fuzzy on, how different frameworks compare, mnemonics for hard-to-remember material, or just say "quiz me on [topic]" and I'll fire questions at you.\n\nWhat's on your mind?`);
+}
+
+function startFullExam() {
+  currentMode = 'exam';
+  currentDomain = null;
+  chatHistory = [];
+  renderChatScreen('Simulated Exam', 'Exam', 'quiz');
+  sendMessage('Start my simulated CISSP exam. 50 questions, mixed domains weighted by exam percentage.', true);
+}
+
+function renderChatScreen(title, modeLabel, modeClass) {
+  document.getElementById('screen').innerHTML = `
+    <div class="chat-header">
+      <button class="back-btn" onclick="renderHome()">← Home</button>
+      <div>
+        <div class="chat-title">${title}<span class="mode-badge ${modeClass}">${modeLabel}</span></div>
+      </div>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="suggestions" id="suggestions"></div>
+    <div class="chat-input-wrap">
+      <textarea class="chat-input" id="chat-input" placeholder="Type your answer or ask a question..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="send-btn" onclick="handleSend()">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  `;
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+}
+
+function handleSend() {
+  const input = document.getElementById('chat-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text || isTyping) return;
+  input.value = '';
+  input.style.height = 'auto';
+  sendMessage(text, false);
+}
+
+function addMessageToUI(role, content) {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `<div class="msg-bubble">${formatContent(content)}</div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function formatContent(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^### (.+)$/gm, '<strong>$1</strong>')
+    .replace(/^## (.+)$/gm, '<strong>$1</strong>')
+    .replace(/^# (.+)$/gm, '<strong>$1</strong>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^/, '<p>').replace(/$/, '</p>')
+    .replace(/<p><\/p>/g, '');
+}
+
+function showTyping() {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = 'msg assistant';
+  div.id = 'typing-indicator';
+  div.innerHTML = `<div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function updateSuggestions(responseText) {
+  const sug = document.getElementById('suggestions');
+  if (!sug) return;
+  sug.innerHTML = '';
+  const suggestions = [];
+  if (currentMode === 'quiz') {
+    suggestions.push('Next question', 'Explain that more', 'Give me a hint');
+  } else if (currentMode === 'teach') {
+    suggestions.push('Quiz me on this', 'Give me an example', 'What are the key mnemonics?');
+  } else {
+    suggestions.push('Quiz me on this topic', 'Give me a real-world example', 'What do I need to memorize?');
+  }
+  suggestions.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'sug-btn';
+    btn.textContent = s;
+    btn.onclick = () => sendMessage(s, false);
+    sug.appendChild(btn);
+  });
+}
+
+function parseScoreUpdates(text) {
+  const regex = /SCORE_UPDATE:(\w+):(\d+):(\d+)/g;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    const [, key, correct, total] = match;
+    const c = parseInt(correct), t = parseInt(total);
+    if (!appState.scores[key]) appState.scores[key] = { correct: 0, total: 0, attempts: 0 };
+    appState.scores[key].correct += c;
+    appState.scores[key].total += t;
+    appState.scores[key].attempts = (appState.scores[key].attempts || 0) + 1;
+    appState.totalQuestions += t;
+    appState.totalCorrect += c;
+  }
+  if (regex.source && text.includes('SCORE_UPDATE')) {
+    updateStreak(appState);
+    saveState(appState);
+  }
+}
+
+async function sendMessage(userText, isSystem) {
+  if (isTyping) return;
+  isTyping = true;
+
+  const btn = document.getElementById('send-btn');
+  if (btn) btn.disabled = true;
+
+  if (!isSystem) {
+    addMessageToUI('user', userText);
+    chatHistory.push({ role: 'user', content: userText });
+  } else {
+    chatHistory.push({ role: 'user', content: userText });
+  }
+
+  showTyping();
+
+  const domainInfo = currentDomain ? `Domain ${currentDomain.id}: ${currentDomain.name}` : 'All domains';
+  const systemPrompt = buildSystemPrompt(currentMode || 'free', domainInfo, appState.scores);
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: chatHistory
+      })
+    });
+
+    const data = await response.json();
+    const replyText = data.content?.map(b => b.text || '').join('') || 'Sorry, I had trouble responding. Please try again.';
+
+    removeTyping();
+    chatHistory.push({ role: 'assistant', content: replyText });
+
+    parseScoreUpdates(replyText);
+    const cleanReply = replyText.replace(/SCORE_UPDATE:\w+:\d+:\d+/g, '').trim();
+    addMessageToUI('assistant', cleanReply);
+    updateSuggestions(cleanReply);
+
+  } catch(err) {
+    removeTyping();
+    addMessageToUI('assistant', 'Connection issue — please check your network and try again.');
+  }
+
+  isTyping = false;
+  if (btn) btn.disabled = false;
+  const input = document.getElementById('chat-input');
+  if (input) input.focus();
+}
+
+renderHome();
+</script>
+</body>
+</html>
